@@ -1,0 +1,101 @@
+#Minimalne ploskve
+
+url(https://nummat.gitlab.io/vaje-nummat/vaje/2_linearni_sistemi/03_minimalne_ploskve/)
+Poišči obliko milnice če imaš podano obliko zanke
+
+Ploskev:
+kako opišemo Ploskev
+-implicitno: F(x,y,z) = 0
+-eksplicitno: z = f(x,y)
+-parametrično: x = x(t,s), y=y(t,s), z = z(t,s)
+
+Vzamemo eksplicitno formo in predpostavimo da ima zanka pravokotni tloris
+
+Iščemo funkcijo f(x,y), na [a,b] x [c,d]
+tako, da ima graf funkcije minimalno površino.
+
+In velja f(a,y) = f_1(y)    <- robni pogoji
+        f(b,y) = f_2(y)     
+        f(x,c) = f_3(x)     
+        f(x,d) = f_4(x)     
+Za neke funkcije f_1, f_2, f_3 in f_4.
+
+Za minimalne ploskve velja Laplacova enačba
+Laplac(f(x,y)) = 0 (znakec trikotnik)
+odvod^2 f / odvod x^2 + odvod^2 f / odvod y^2 = 0
+
+Reši Laplacovo enačbo na [a,b] x [c,d] za dane robne pogoje. (Temu se reče robni problem)
+
+Funkcijo f(x,y) obravnavamo le v vozliščih mreže (x os od a do b, y os od c do d, in dobimo xn*ym točk).
+f(x_i,y_j) = z_{ij} = ?
+
+Diskretizacija Laplacove enačbe (končne difference)
+f'(x) =~ (f(x + h/2) - f(x - h/2)) / h (=~ aproks)
+f''(x) =~  ((f(x+h)/h) - (f(x) - f(x-h)/h))/h = (f(x+h) - 2f(x) + f(x-h))/h^2
+
+v točki (x_i,y_j) zapišemo diskertizirano Laplacevo enačbo:
+Laplac f(x_i,y_j) = (odvod^2f / odvod x^2)(x_i,y_j) + (odvod^2 f / odvod y^2)(x_i,y_j) =
+    = (f(x_i +h,y_j)-2f(x_i,y_j) + f(x_i -h,y_j)) / h^2 + (f(x_i,y_j + h)-2f(x_i,y_j) + f(x_i,y_j + h)) / h^2 =
+    = (z_{i+1,j} + z_{i-1,j} - 4z_{ij} + z_{i,j+1} + z_{i,j-1})/h^2 = 0
+
+z_{i+1,j} + z_{i-1,j} - 4z_{ij} + z_{i,j+1} + z_{i,j-1} = 0
+
+če gledaš primer i = j = 1
+z_{21} + z_{12} - 4z_{11} + z_{01} + z_{10} = 0
+z_{21} + z_{12} - 4z_{11} = - (z_{01} + z_{10})
+
+Ker so z-ji ubistvu matrika, jih bo treba spremenit v vektor (flatten) (diagonale so -4)
+
+Kako naresti to matriko?
+
+k(i,j) = j + m * (i-1)
+
+---------------------------------------------5.vaje--------------------------------------------------------------
+
+Robni problem za diferencialni operator (delta)
+delta(f) = 0
+
+[a,b] x [c,d] je območje
+
+f(a,y) = f_1(y)
+f(b,y) = f_2(y)
+f(x,c) = f_3(x)
+f(x,d) = f_4(x)
+
+1 - Podatke za robni problem zapakiramo v podatkovno strukturo:
+Robni problem pravokotnik
+
+2- Funkcija, ki reši robni problem resi(robni_problem, parametri)
+
+struct RobniProblemPravokotnikLaplace
+    meje # [a,b,c,d]
+    robni_pogoji # [f_s,f_z,f_l,f_d]
+end
+
+resi(rpii RobniProblemPravokotnikLaplace, ...)
+
+-> generiraj mrežo
+-> generiraj Laplacevo matriko
+-> generiraj desne strani
+-> reši sistem
+-> rešitev prevedi v matriko
+-> vrni rešitev
+
+mreža oblike 
+d|  |  |  |  |  |  |  |
+ |  |  |  |  |  |  |  |
+ |  |  |  |  |  |  |  |     m
+c|__|__|__|__|__|__|__|____
+a            n              b
+
+n = floor(b-a/h)
+
+
+iterativne metode
+
+i,j-ta enačba:
+z_i+1,j + z_i,j+1 - 4z_i,j + z_i-1,j + z_i,j-1 = 0 /:4 (in člen z 4 neseš na desno)
+z_i,j = 1/4 (z_i+1,j + z_i,j+1 + z_i-1,j + z_i,j-1)
+z_i,j^n+1 = 1/4 (z_i+1,j^n + z_i,j+1^n + z_i-1,j^n + z_i,j-1^n)   <- Jacobi
+z_i,j^n+1 = 1/4 (z_i+1,j^n + z_i,j+1^n + z_i-1,j^n+1 + z_i,j-1^n+1)   <- Gauss Seidel
+z_i,j^n+1 = z_i,j_gs^n+1 * w + (1-w) * z_i,j^n     <- SOR (praktično pokvari rezultat mal)
