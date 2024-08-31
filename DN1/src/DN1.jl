@@ -1,13 +1,8 @@
 module DN1
 using LinearAlgebra
-export ZgornjiHessenberg,qr,Givens,Hessenberg,qrIteration
+export ZgornjiHessenberg,qr,Givens,Hessenberg,eigen
 
 import Base: *
-
-"""
-Podatkovna struktura za 3diagonalno matriko.
-"""
-#Uporabi ] activate Vaje02 in pol using backspace Vaje02
 
 struct ZgornjiHessenberg
   H::Matrix{Float64}
@@ -22,7 +17,12 @@ function *(H::ZgornjiHessenberg,G::Matrix)
     return G.G * H.H 
 end
 
+function *(R::Matrix,G::Givens)
+    return R * G.G
+end
 """
+    G = Givens(M)
+
 Ustvari Givens matriko, ki ima 2 vrstici n stolpcev, vsak stolpec predstavlja rotacijo [cos(a),sin(a)]^T
 """
 function Givens(n::Int)
@@ -30,12 +30,16 @@ function Givens(n::Int)
 end
 
 """
+    H = Hessenberg(M)
+
 Ustvari Zgornjo Hessenberg matriko
 """
 function Hessenberg(M::Matrix)
     return ZgornjiHessenberg(M)
 end
 """
+    R = GivensRotationMatrix(i,G,n)
+
 Ustvari Givensovo rotacijsko matriko G(i,j,a)
 """
 function GivensRotationMatrix(i::Int,G::Givens,n::Int)
@@ -49,10 +53,11 @@ end
 
 
 """
+    Q,R = qr(Zh)
+
 QR razcep Zgornje Hessebergove matrike z Givensovimi rotacijami.
 """
 function qr(Zh::ZgornjiHessenberg)
-    # TODO: QR razcep Hessebergove matrike z Givensovimi rotacijami.
     velikost = size(Zh.H, 1)
     Gi = Givens(velikost-1)
     i = 1
@@ -72,9 +77,15 @@ function qr(Zh::ZgornjiHessenberg)
     return Gi,R
 end
 
-function qrIteration(H::ZgornjiHessenberg,iter = 10)
+"""
+    evalues,evectors = eigen(H,iter)
+
+Funkcija uporabi metodo QR iteracije za računanje lastnih vrednosti in lastnih vektorjev matrike H v iter iteracijah.
+"""
+function eigen(H::ZgornjiHessenberg,iter = 10)
     n = size(H.H,1)
-    R = Matrix{Float64}(I,n,n)
+    R = Matrix{Float64}(I, n, n)
+    lastnivektorji = Matrix{Float64}(I, n, n)
     for _ in 1:iter
         G,R = qr(H)
         Q = GivensRotationMatrix(1,G,n)
@@ -82,8 +93,10 @@ function qrIteration(H::ZgornjiHessenberg,iter = 10)
             Q = Q * GivensRotationMatrix(i,G,n)
         end
         H = Hessenberg(R*Q)
+        lastnivektorji *= Q
     end
-    return R
+    lastnevrednosti = LinearAlgebra.diag(H.H)
+    return lastnevrednosti, lastnivektorji
 end
 
 end # module DN1

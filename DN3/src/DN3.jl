@@ -7,7 +7,7 @@ Računanje kotnega odmika s pomočjo metode Runge-Kutta 4. stopnje.
 """
 function nihalo(l,t,theta0,dtheta0,n)
     g = 9.80665
-    f(y) = -g/l * sin(y)
+    f(t,y) = -g/l * sin(y(t))
     y0 = [theta0,dtheta0]
     h = t/n
     for i in 0:n-1
